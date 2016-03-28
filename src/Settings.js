@@ -2,16 +2,17 @@
 import fileInput from './input/FileInput';
 
 // formats
-import jsonArrayFormat from 'format/JsonArrayFormat';
-import jsonFormat from 'format/JsonFormat';
-import logFormat from 'format/LogFormat';
-import csvFormat from 'format/CsvFormat';
+import jsonArrayFormat from './format/JsonArrayFormat';
+import jsonFormat from './format/JsonFormat';
+import logFormat from './format/LogFormat';
+import csvFormat from './format/CsvFormat';
 
 // mappers
 import functionMapper from './mapper/FunctionMapper';
 
 // outputs
 import indexerOutput from './output/IndexerOutput';
+import csvOutput from './output/CsvOutput';
 
 export default {
     source: {
@@ -21,12 +22,14 @@ export default {
         log: logFormat,
         json: jsonFormat,
         'json-array': jsonArrayFormat,
-        csv: csvFormat
+        csv: csvFormat,
+        tsv: csvFormat
     },
     mapper: {
         fn: functionMapper
     },
     output: {
-        indexer: indexerOutput
+        indexer: indexerOutput,
+        csv: csvOutput
     }
 };
