@@ -10,7 +10,7 @@ import md5 from 'md5';
 export default function (args) {
     const db = lowDB(args.db || Path.join(OS.homedir(), '.watcher.db'), {storage: FileStorage});
 
-    const watcher = Chokidar.watch(args.filePattern || '.', {
+    const watcher = Chokidar.watch(args.inputFilePattern || '.', {
         persistent: true, // watch files in daemon mode
         cwd: args.cwd || '.',
         depth: args.depth || 1, // depth
@@ -35,5 +35,5 @@ export default function (args) {
         }
     });
 
-    console.log(`>>> Watching files for: ${args.filePattern || '.'} <<<`);
+    console.log(`>>> Watching files for: ${args.inputFilePattern || '.'} <<<`);
 }

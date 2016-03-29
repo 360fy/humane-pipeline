@@ -11,8 +11,8 @@ export default class CsvOutput {
             header: _.isUndefined(params.header) ? true : params.header
         });
 
-        if (params.file) {
-            this.stream = FS.createWriteStream(params.file, {flags: 'a', autoClose: true});
+        if (params.outputFile) {
+            this.stream = FS.createWriteStream(params.outputFile, {flags: 'a', autoClose: true});
             this.stdout = false;
         } else {
             this.stream = process.stdout;

@@ -25,9 +25,9 @@ export default class DataPipelineProcessor {
         this.eventEmitter.addListener(PROCESS_NEXT_EVENT, () => this.processWatchQueue());
 
         watchFile({
-            filePattern: params.filePattern,
+            inputFilePattern: params.inputFilePattern,
             process: path => {
-                this.watchQueue.push({indexer: params.indexer, file: path, watch: true});
+                this.watchQueue.push({indexer: params.indexer, inputFile: path, watch: true});
                 this.eventEmitter.emit(PROCESS_NEXT_EVENT);
             }
         });
@@ -58,7 +58,7 @@ export default class DataPipelineProcessor {
               const sourceHandler = Settings.source[this.config.input.source.type];
               const formatHandler = Settings.format[this.config.input.format.type];
 
-              console.log('Started processing: ', params.file);
+              console.log('Started processing: ', params.inputFile);
 
               let stream = sourceHandler(_.defaultsDeep({}, params, this.config.input.source));
 
@@ -99,7 +99,7 @@ export default class DataPipelineProcessor {
                               if (!params.watch) {
                                   resolve(outputHandler.shutdown());
                               } else {
-                                  console.log('Completed processing: ', params.file);
+                                  console.log('Completed processing: ', params.inputFile);
                                   _this.running = false;
                                   _this.eventEmitter.emit(PROCESS_NEXT_EVENT);
                                   resolve(true);

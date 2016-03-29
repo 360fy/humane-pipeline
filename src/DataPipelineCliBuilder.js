@@ -27,7 +27,7 @@ export default function (indexerBuilder, dataPipelineConfig) {
                       const dataPipelineProcessor = new DataPipelineProcessor(importConfig);
                       if (args.watch) {
                           return dataPipelineProcessor.watch({
-                              filePattern: args.file,
+                              inputFilePattern: args.file,
                               indexer: indexerBuilder,
                               gzip: args.gzip,
                               zip: args.zip
@@ -35,7 +35,7 @@ export default function (indexerBuilder, dataPipelineConfig) {
                       }
 
                       return dataPipelineProcessor.process({
-                          file: args.file,
+                          inputFile: args.file,
                           indexer: indexerBuilder,
                           gzip: args.gzip,
                           zip: args.zip
