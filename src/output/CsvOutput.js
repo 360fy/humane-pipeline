@@ -19,11 +19,6 @@ export default class CsvOutput {
             this.stdout = true;
         }
 
-        this.csvStringifier.on('record', (data) => {
-            this.stream.write(data);
-            this.stream.write(OS.EOL);
-        });
-
         this.csvStringifier.on('error', (err) => {
             console.error(err.message);
         });
@@ -31,6 +26,8 @@ export default class CsvOutput {
         this.csvStringifier.on('finish', () => {
             console.log('<<< Done >>>');
         });
+
+        this.csvStringifier.pipe(this.stream);
     }  
 
     handle(doc) {
@@ -43,6 +40,7 @@ export default class CsvOutput {
         if (!this.stdout) {
             this.stream.end();
         }
+        
         return true;
     }
 }
