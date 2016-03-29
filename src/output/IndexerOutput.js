@@ -7,7 +7,7 @@ export default class IndexerOutput {
         }
 
         this.indexer = _.isFunction(params.indexer) ? params.indexer() : params.indexer;
-        this.handler = params.indexer[params.handler];
+        this.handler = this.indexer[params.handler];
         this.indexType = params.indexType;
     }
 
