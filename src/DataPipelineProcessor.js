@@ -60,20 +60,20 @@ export default class DataPipelineProcessor {
 
               console.log('Started processing: ', params.file);
 
-              let stream = sourceHandler(_.extend({}, this.config.input.source, params));
+              let stream = sourceHandler(_.defaultsDeep({}, params, this.config.input.source));
 
-              stream = formatHandler(stream, _.extend({}, this.config.input.format, params));
+              stream = formatHandler(stream, _.defaultsDeep({}, params, this.config.input.format));
 
               if (this.config.mapper) {
                   const mapperHandler = Settings.mapper[this.config.mapper.type];
 
-                  stream = mapperHandler(stream, _.extend({}, this.config.mapper, params, {lookups}));
+                  stream = mapperHandler(stream, _.defaultsDeep({lookups}, params, this.config.mapper));
               }
 
               let queuedCount = 0;
               let processedCount = 0;
 
-              const outputHandler = new (Settings.output[this.config.output.type])(_.extend({}, this.config.output, params));
+              const outputHandler = new (Settings.output[this.config.output.type])(_.defaultsDeep({}, params, this.config.output));
 
               stream.on('data', GuardedPromise.guard(this.config.output.concurrency || 1, (data) => {
                   const numIndex = queuedCount++;
@@ -110,7 +110,7 @@ export default class DataPipelineProcessor {
                           }
                       }
 
-                      shutdownIndexerIfProcessed();
+                      _.delay(shutdownIndexerIfProcessed, 5000);
                   });
               });
           });

@@ -28,7 +28,7 @@ export default function (indexerBuilder, dataPipelineConfig) {
                       if (args.watch) {
                           return dataPipelineProcessor.watch({
                               filePattern: args.file,
-                              indexer: indexerBuilder(),
+                              indexer: indexerBuilder,
                               gzip: args.gzip,
                               zip: args.zip
                           });
@@ -36,12 +36,12 @@ export default function (indexerBuilder, dataPipelineConfig) {
 
                       return dataPipelineProcessor.process({
                           file: args.file,
-                          indexer: indexerBuilder(),
+                          indexer: indexerBuilder,
                           gzip: args.gzip,
                           zip: args.zip
                       });
                   },
-                  {watch: true, memorySize: importConfig.output.memorySize, gcInterval: importConfig.output.gcInterval}
+                  {watch: !!importConfig.output.memorySize, memorySize: importConfig.output.memorySize, gcInterval: importConfig.output.gcInterval}
                 );
           }
       });

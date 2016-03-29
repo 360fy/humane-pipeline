@@ -3,3 +3,4 @@ lib/
 bin/
 webpack.config.js
 config/
+Test.js

@@ -1,10 +1,12 @@
+import _ from 'lodash';
+
 export default class IndexerOutput {
     constructor(params) {
         if (!params || !params.indexer) {
             throw new Error('Params must have indexer instance');
         }
 
-        this.indexer = params.indexer;
+        this.indexer = _.isFunction(params.indexer) ? params.indexer() : params.indexer;
         this.handler = params.indexer[params.handler];
         this.indexType = params.indexType;
     }

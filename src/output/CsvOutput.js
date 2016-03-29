@@ -1,4 +1,6 @@
 import _ from 'lodash';
+import OS from 'os';
+import FS from 'fs';
 import buildCsvStringifier from 'csv-stringify';
 
 export default class CsvOutput {
@@ -9,8 +11,17 @@ export default class CsvOutput {
             header: _.isUndefined(params.header) ? true : params.header
         });
 
-        this.csvStringifier.on('readable', (data) => {
-            console.log(data);
+        if (params.file) {
+            this.stream = FS.createWriteStream(params.file, {flags: 'a', autoClose: true});
+            this.stdout = false;
+        } else {
+            this.stream = process.stdout;
+            this.stdout = true;
+        }
+
+        this.csvStringifier.on('record', (data) => {
+            this.stream.write(data);
+            this.stream.write(OS.EOL);
         });
 
         this.csvStringifier.on('error', (err) => {
@@ -23,9 +34,15 @@ export default class CsvOutput {
     }  
 
     handle(doc) {
-        return this.csvStringifier.write(doc);
+        this.csvStringifier.write(doc);
+        return doc;
     }
 
     shutdown() {
+        this.csvStringifier.end();
+        if (!this.stdout) {
+            this.stream.end();
+        }
+        return true;
     }
 }
