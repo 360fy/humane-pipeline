@@ -1,46 +1,29 @@
 import _ from 'lodash';
-import OS from 'os';
 import FS from 'fs';
 import buildCsvStringifier from 'csv-stringify';
 
-export default class CsvOutput {
-    constructor(params) {
-        this.csvStringifier = buildCsvStringifier({
-            delimiter: params.delimiter,
-            rowDelimiter: params.rowDelimiter,
-            header: _.isUndefined(params.header) ? true : params.header
-        });
-
-        if (params.outputFile) {
-            this.stream = FS.createWriteStream(params.outputFile, {flags: 'a', autoClose: true});
-            this.stdout = false;
-        } else {
-            this.stream = process.stdout;
-            this.stdout = true;
-        }
-
-        this.csvStringifier.on('error', (err) => {
-            console.error(err.message);
-        });
-
-        this.csvStringifier.on('finish', () => {
-            console.log('<<< Done >>>');
-        });
-
-        this.csvStringifier.pipe(this.stream);
-    }  
-
-    handle(doc) {
-        this.csvStringifier.write(doc);
-        return doc;
+export default function (stream, params) {
+    const eventEmitter = params.eventEmitter;
+    
+    const csvStringifier = buildCsvStringifier({
+        delimiter: params.delimiter,
+        rowDelimiter: params.rowDelimiter,
+        header: _.isUndefined(params.header) ? true : params.header
+    });
+    
+    let outputStream = null;
+    
+    if (params.outputFile) {
+        outputStream = FS.createWriteStream(params.outputFile, {flags: 'a', autoClose: true});
+    } else {
+        outputStream = process.stdout;
     }
+    
+    const finalStream = stream.pipe(csvStringifier).pipe(outputStream);
+    
+    finalStream.on('finish', () => {
+        eventEmitter.emit('OUTPUT_FINISH');
+    });
 
-    shutdown() {
-        this.csvStringifier.end();
-        if (!this.stdout) {
-            this.stream.end();
-        }
-        
-        return true;
-    }
+    return finalStream;
 }
