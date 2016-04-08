@@ -81,7 +81,7 @@ export default class DataPipelineProcessor {
 
               return new Promise(resolve => {
                   this.eventEmitter.on(OUTPUT_FINISH, () => {
-                      console.log(`Completed processing '${params.inputFile} in: ${(performanceNow() - startTime).toFixed(3)}ms`);
+                      console.log(`Completed processing '${params.inputFile}' in: ${(performanceNow() - startTime).toFixed(3)}ms`);
                       
                       if (params.watch) {
                           _this.running = false;

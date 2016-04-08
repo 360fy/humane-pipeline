@@ -16,6 +16,13 @@ export default class CsvTransform extends require('stream').Transform {
         }
 
         this.columnDelimiter = options.delimiter || ',';
+
+        this.columnDelimiterLength = this.columnDelimiter.length;
+
+        if (this.columnDelimiterLength > 1) {
+            this.columnDelimiter = this.columnDelimiter.split('');
+        }
+
         this.quote = _.isUndefined(options.quote) ? '"' : options.quote;
         this.quoteEscape = _.isUndefined(options.escape) ? '"' : options.escape;
 
@@ -31,6 +38,14 @@ export default class CsvTransform extends require('stream').Transform {
 
         this.lastChar = null;
         this.inQuotedBlock = false;
+    }
+
+    isColumnDelimiter() {
+        if (this.columnDelimiterLength === 1) {
+            return _.last(this.currentColumnBuffer) === this.columnDelimiter;
+        }
+
+        return _.isEqual(_.takeRight(this.currentColumnBuffer, this.columnDelimiterLength), this.columnDelimiter);
     }
 
     isRowDelimiter() {
@@ -67,9 +82,12 @@ export default class CsvTransform extends require('stream').Transform {
                 // do not consider quote char
                 this.currentColumnBuffer.pop();
                 this.inQuotedBlock = !this.inQuotedBlock;
-            } else if (!this.inQuotedBlock && char === this.columnDelimiter) {
+            } else if (!this.inQuotedBlock && this.isColumnDelimiter()) {
                 // do not consider column delimiter
-                this.currentColumnBuffer.pop();
+                for (let j = 0; j < this.columnDelimiterLength; j++) {
+                    this.currentColumnBuffer.pop();
+                }
+
                 this.currentRowBuffer.push(this.currentColumnBuffer.join('')); // convert into array
                 this.currentColumnNum++;
                 this.currentColumnBuffer = null;
