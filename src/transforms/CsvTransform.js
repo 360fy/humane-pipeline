@@ -12,7 +12,9 @@ export default class CsvTransform extends require('stream').Transform {
         this.rowDelimiterLength = this.rowDelimiter.length;
 
         if (this.rowDelimiterLength > 1) {
-            this.rowDelimiter = this.rowDelimiter.split('');
+            this.rowDelimiter = Buffer.from(this.rowDelimiter, 'utf8');
+        } else {
+            this.rowDelimiter = this.rowDelimiter.charCodeAt(0);
         }
 
         this.columnDelimiter = options.delimiter || ',';
@@ -20,7 +22,9 @@ export default class CsvTransform extends require('stream').Transform {
         this.columnDelimiterLength = this.columnDelimiter.length;
 
         if (this.columnDelimiterLength > 1) {
-            this.columnDelimiter = this.columnDelimiter.split('');
+            this.columnDelimiter = Buffer.from(this.columnDelimiter, 'utf8');
+        } else {
+            this.columnDelimiter = this.columnDelimiter.charCodeAt(0);
         }
 
         this.quote = _.isUndefined(options.quote) ? '"' : options.quote;
@@ -30,79 +34,104 @@ export default class CsvTransform extends require('stream').Transform {
             this.quoteEscape = null;
         }
 
+        if (this.quote) {
+            this.quote = this.quote.charCodeAt(0);
+        }
+
+        if (this.quoteEscape) {
+            this.quoteEscape = this.quoteEscape.charCodeAt(0);
+        }
+
         this.decoder = new StringDecoder(options && options.encoding || 'utf8');
 
         this.currentColumnNum = 1;
         this.currentRowBuffer = [];
-        this.currentColumnBuffer = null;
+        this.currentBufferAllocatedLength = 131072;
+        this.currentBuffer = Buffer.alloc(this.currentBufferAllocatedLength);
+        this.currentBufferLength = 0;
 
         this.lastChar = null;
         this.inQuotedBlock = false;
     }
+    
+    isSameDelimiter(delimiterLength, delimiter) {
+        if (delimiterLength === 1) {
+            if (this.currentBufferLength <= 0) {
+                return false;
+            }
 
-    isColumnDelimiter() {
-        if (this.columnDelimiterLength === 1) {
-            return _.last(this.currentColumnBuffer) === this.columnDelimiter;
+            return this.currentBuffer[this.currentBufferLength - 1] === delimiter;
         }
 
-        return _.isEqual(_.takeRight(this.currentColumnBuffer, this.columnDelimiterLength), this.columnDelimiter);
+        if (this.currentBufferLength < delimiterLength) {
+            return false;
+        }
+
+        let same = true;
+        for (let j = this.currentBufferLength - delimiterLength, k = 0; j < this.currentBufferLength; j++, k++) {
+            if (this.currentBuffer[j] !== delimiter[k]) {
+                same = false;
+                break;
+            }
+        }
+
+        return same;
+    }
+
+    isColumnDelimiter() {
+        return this.isSameDelimiter(this.columnDelimiterLength, this.columnDelimiter);
     }
 
     isRowDelimiter() {
-        if (this.rowDelimiterLength === 1) {
-            return _.last(this.currentColumnBuffer) === this.rowDelimiter;
-        }
-
-        return _.isEqual(_.takeRight(this.currentColumnBuffer, this.rowDelimiterLength), this.rowDelimiter);
+        return this.isSameDelimiter(this.rowDelimiterLength, this.rowDelimiter);
     }
 
     _transform(chunk, encoding, done) {
-        const str = this.decoder.write(chunk);
+        const chunkLength = chunk.length;
 
-        for (let i = 0, len = str.length; i < len; i++) {
-            const char = str[i];
+        if (chunkLength + this.currentBufferLength > this.currentBufferAllocatedLength) {
+            const oldBuffer = this.currentBuffer;
 
-            // push character in current column
-            if (this.currentColumnBuffer === null) {
-                this.currentColumnBuffer = [char];
-            } else {
-                this.currentColumnBuffer.push(char);
+            while (chunkLength + this.currentBufferLength > this.currentBufferAllocatedLength) {
+                this.currentBufferAllocatedLength *= 2;
             }
+
+            const newBuffer = Buffer.alloc(this.currentBufferAllocatedLength);
+            oldBuffer.copy(newBuffer, 0, this.currentBufferLength);
+
+            this.currentBuffer = newBuffer;
+        }
+
+        for (let i = 0; i < chunkLength; i++) {
+            const char = chunk[i];
+            this.currentBuffer[this.currentBufferLength++] = char;
 
             if (this.lastChar && this.lastChar === this.quoteEscape && this.quote && char === this.quote) {
                 if (this.quote && this.lastChar === this.quote) {
                     this.inQuotedBlock = false;
                 }
 
-                // pop 2 - one escape and the current char, and then push quote char
-                this.currentColumnBuffer.pop();
-                this.currentColumnBuffer.pop();
-                this.currentColumnBuffer.push(char);
+                this.currentBufferLength -= 2;
+                this.currentBuffer[this.currentBufferLength++] = char;
             } else if (this.quote && char === this.quote) {
                 // do not consider quote char
-                this.currentColumnBuffer.pop();
+                this.currentBufferLength--;
                 this.inQuotedBlock = !this.inQuotedBlock;
             } else if (!this.inQuotedBlock && this.isColumnDelimiter()) {
-                // do not consider column delimiter
-                for (let j = 0; j < this.columnDelimiterLength; j++) {
-                    this.currentColumnBuffer.pop();
-                }
-
-                this.currentRowBuffer.push(this.currentColumnBuffer.join('')); // convert into array
+                this.currentBufferLength -= this.columnDelimiterLength;
+                
+                this.currentRowBuffer.push(this.decoder.write(this.currentBuffer.slice(0, this.currentBufferLength))); // convert into array
                 this.currentColumnNum++;
-                this.currentColumnBuffer = null;
+                this.currentBufferLength = 0;
             } else if (!this.inQuotedBlock && this.currentColumnNum === this.totalColumnCount && this.isRowDelimiter()) {
-                for (let j = 0; j < this.rowDelimiterLength; j++) {
-                    this.currentColumnBuffer.pop();
-                }
+                this.currentBufferLength -= this.rowDelimiterLength;
 
                 // do not consider row delimiters
-                this.currentRowBuffer.push(this.currentColumnBuffer.join(''));
-                this.currentColumnBuffer = null;
+                this.currentRowBuffer.push(this.decoder.write(this.currentBuffer.slice(0, this.currentBufferLength))); // convert into array
                 this.push(_.zipObject(this.columns, this.currentRowBuffer));
                 this.currentRowBuffer = [];
                 this.currentColumnNum = 1;
-                this.currentColumnBuffer = null;
+                this.currentBufferLength = 0;
             }
 
             this.lastChar = char;
