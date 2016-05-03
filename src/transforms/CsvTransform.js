@@ -6,8 +6,9 @@ export default class CsvTransform extends require('stream').Transform {
     constructor(options) {
         super({readableObjectMode: true});
 
+        this.header = options.header;
         this.columns = options.columns;
-        this.totalColumnCount = this.columns.length;
+        this.totalColumnCount = this.columns && this.columns.length;
         this.rowDelimiter = options.rowDelimiter || OS.EOL;
         this.rowDelimiterLength = this.rowDelimiter.length;
 
@@ -52,8 +53,14 @@ export default class CsvTransform extends require('stream').Transform {
 
         this.lastChar = null;
         this.inQuotedBlock = false;
+
+        this.headerRowSeen = false;
+
+        if (!this.header && (!this.columns || _.isEmpty(this.columns))) {
+            throw new Error('Either columns array should be provided or header should be true!');
+        }
     }
-    
+
     isSameDelimiter(delimiterLength, delimiter) {
         if (delimiterLength === 1) {
             if (this.currentBufferLength <= 0) {
@@ -119,16 +126,24 @@ export default class CsvTransform extends require('stream').Transform {
                 this.inQuotedBlock = !this.inQuotedBlock;
             } else if (!this.inQuotedBlock && this.isColumnDelimiter()) {
                 this.currentBufferLength -= this.columnDelimiterLength;
-                
+
                 this.currentRowBuffer.push(this.decoder.write(this.currentBuffer.slice(0, this.currentBufferLength))); // convert into array
                 this.currentColumnNum++;
                 this.currentBufferLength = 0;
-            } else if (!this.inQuotedBlock && this.currentColumnNum === this.totalColumnCount && this.isRowDelimiter()) {
+            } else if (!this.inQuotedBlock && ((this.header && !this.headerRowSeen) || this.currentColumnNum === this.totalColumnCount) && this.isRowDelimiter()) {
                 this.currentBufferLength -= this.rowDelimiterLength;
 
                 // do not consider row delimiters
                 this.currentRowBuffer.push(this.decoder.write(this.currentBuffer.slice(0, this.currentBufferLength))); // convert into array
-                this.push(_.zipObject(this.columns, this.currentRowBuffer));
+                if (this.header && !this.headerRowSeen) {
+                    // set these as columns
+                    this.columns = this.currentRowBuffer;
+                    this.totalColumnCount = this.columns.length;
+                    this.headerRowSeen = true;
+                } else {
+                    this.push(_.zipObject(this.columns, this.currentRowBuffer));
+                }
+
                 this.currentRowBuffer = [];
                 this.currentColumnNum = 1;
                 this.currentBufferLength = 0;

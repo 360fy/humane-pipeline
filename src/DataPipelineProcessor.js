@@ -63,7 +63,7 @@ export default class DataPipelineProcessor {
 
               console.log('Started processing: ', params.inputFile);
 
-              let stream = sourceHandler(_.defaultsDeep({}, params, this.config.input.source));
+              let stream = sourceHandler(_.defaultsDeep({file: params.inputFile}, params, this.config.input.source));
 
               stream = formatHandler(stream, _.defaultsDeep({}, params, this.config.input.format));
 

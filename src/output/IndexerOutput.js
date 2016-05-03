@@ -3,7 +3,7 @@ import Promise from 'bluebird';
 
 class IndexerDataTransform extends require('stream').Transform {
     constructor(params) {
-        super({readableObjectMode: true});
+        super({objectMode: true});
 
         if (!params || !params.indexer) {
             throw new Error('Params must have indexer instance');
@@ -32,7 +32,7 @@ class IndexerDataTransform extends require('stream').Transform {
 export default function (stream, params) {
     const eventEmitter = params.eventEmitter;
     const indexer = _.isFunction(params.indexer) ? params.indexer() : params.indexer;
-    const handler = this.indexer[params.handler];
+    const handler = indexer[params.handler];
     const indexType = params.indexType;
     const filter = params.filter;
 
@@ -43,7 +43,7 @@ export default function (stream, params) {
     });
     
     finalStream.on('end', () => {
-        Promise.resolve(this.indexer.shutdown())
+        Promise.resolve(indexer.shutdown())
           .then(() => {
               eventEmitter.emit('OUTPUT_FINISH');
           });

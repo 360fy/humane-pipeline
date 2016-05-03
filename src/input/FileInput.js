@@ -2,11 +2,11 @@ import FS from 'graceful-fs';
 import Zlib from 'zlib';
 
 export default function (params) {
-    if (!params || !params.inputFile) {
+    if (!params || !params.file) {
         throw new Error('Params must have file path!');
     }
 
-    const stream = FS.createReadStream(params.inputFile, {flags: 'r'});
+    const stream = FS.createReadStream(params.file, {flags: 'r'});
 
     if (params.gzip) {
         return stream.pipe(Zlib.createGunzip({flush: 1, end: false, chunkSize: 1024 * 1024}));
