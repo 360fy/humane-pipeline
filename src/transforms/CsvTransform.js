@@ -28,20 +28,22 @@ export default class CsvTransform extends require('stream').Transform {
             this.columnDelimiter = this.columnDelimiter.charCodeAt(0);
         }
 
-        this.quote = _.isUndefined(options.quote) ? '"' : options.quote;
-        this.quoteEscape = _.isUndefined(options.escape) ? '"' : options.escape;
+        // todo: for now quote and quoteEscape chars shall be same
+        // this.quoteEscape = _lodash2.default.isUndefined(options.escape) ? '"' : options.escape;
+        // if (this.quote === null) {
+        //     this.quoteEscape = null;
+        // }
 
-        if (this.quote === null) {
-            this.quoteEscape = null;
-        }
+        this.quote = _.isUndefined(options.quote) ? '"' : options.quote;
 
         if (this.quote) {
             this.quote = this.quote.charCodeAt(0);
+            this.quoteEscape = this.quote; //this.quoteEscape.charCodeAt(0);
         }
 
-        if (this.quoteEscape) {
-            this.quoteEscape = this.quoteEscape.charCodeAt(0);
-        }
+        // if (this.quoteEscape) {
+        //     this.quoteEscape = this.quoteEscape.charCodeAt(0);
+        // }
 
         this.decoder = new StringDecoder(options && options.encoding || 'utf8');
 
@@ -52,6 +54,8 @@ export default class CsvTransform extends require('stream').Transform {
         this.currentBufferLength = 0;
 
         this.lastChar = null;
+        
+        this.quoteBufferLength = 0;
         this.inQuotedBlock = false;
 
         this.headerRowSeen = false;
@@ -111,20 +115,29 @@ export default class CsvTransform extends require('stream').Transform {
 
         for (let i = 0; i < chunkLength; i++) {
             const char = chunk[i];
-            this.currentBuffer[this.currentBufferLength++] = char;
 
-            if (this.lastChar && this.lastChar === this.quoteEscape && this.quote && char === this.quote) {
-                if (this.quote && this.lastChar === this.quote) {
-                    this.inQuotedBlock = false;
+            // this scenario handles when quote and quoteEscape are same
+            if (char === this.quote) {
+                // keep collecting
+                this.quoteBufferLength++;
+                continue;
+            } else if (this.quoteBufferLength > 0) {
+                // we have some sequence of quotes
+                if (this.quoteBufferLength % 2 === 1) {
+                    // we switch the quoted block
+                    this.inQuotedBlock = !this.inQuotedBlock;
+                    this.quoteBufferLength--;
                 }
 
-                this.currentBufferLength -= 2;
-                this.currentBuffer[this.currentBufferLength++] = char;
-            } else if (this.quote && char === this.quote) {
-                // do not consider quote char
-                this.currentBufferLength--;
-                this.inQuotedBlock = !this.inQuotedBlock;
-            } else if (!this.inQuotedBlock && this.isColumnDelimiter()) {
+                while (this.quoteBufferLength > 0) {
+                    this.currentBuffer[this.currentBufferLength++] = this.quote;
+                    this.quoteBufferLength--;
+                }
+            }
+
+            this.currentBuffer[this.currentBufferLength++] = char;
+
+            if (!this.inQuotedBlock && this.isColumnDelimiter()) {
                 this.currentBufferLength -= this.columnDelimiterLength;
 
                 this.currentRowBuffer.push(this.decoder.write(this.currentBuffer.slice(0, this.currentBufferLength))); // convert into array
