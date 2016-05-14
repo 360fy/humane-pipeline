@@ -2,6 +2,8 @@ import JsonParser from 'jsonparse';
 import _ from 'lodash';
 import {StringDecoder} from 'string_decoder';
 
+/* eslint-disable global-require */
+
 function check(pathKey, dataKey) {
     if (_.isString(pathKey)) {
         return dataKey === pathKey;
@@ -47,10 +49,10 @@ export default class JsonTransform extends require('stream').Transform {
 
         this.parser = new JsonParser();
 
-        const _onToken = this.parser.onToken.bind(this.parser);
+        const onTokenHandler = this.parser.onToken.bind(this.parser);
 
         this.parser.onValue = JsonTransform.onJsonValue(this).bind(this.parser);
-        this.parser.onToken = JsonTransform.onJsonToken(_onToken, this).bind(this.parser);
+        this.parser.onToken = JsonTransform.onJsonToken(onTokenHandler, this).bind(this.parser);
         this.parser.onError = JsonTransform.onJsonError(this).bind(this.parser);
     }
 

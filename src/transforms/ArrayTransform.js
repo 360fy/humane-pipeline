@@ -1,5 +1,6 @@
 import _ from 'lodash';
 
+/* eslint-disable global-require */
 export default class ArrayTransform extends require('stream').Transform {
     constructor() {
         super({objectMode: true});

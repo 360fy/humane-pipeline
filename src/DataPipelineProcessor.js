@@ -77,15 +77,15 @@ export default class DataPipelineProcessor {
 
               stream = outputHandler(stream, _.defaultsDeep({lookups, eventEmitter: this.eventEmitter}, params, this.config.output));
               
-              const _this = this;
+              const that = this;
 
               return new Promise(resolve => {
                   this.eventEmitter.on(OUTPUT_FINISH, () => {
                       console.log(`Completed processing '${params.inputFile}' in: ${(performanceNow() - startTime).toFixed(3)}ms`);
                       
                       if (params.watch) {
-                          _this.running = false;
-                          _this.eventEmitter.emit(PROCESS_NEXT_EVENT);
+                          that.running = false;
+                          that.eventEmitter.emit(PROCESS_NEXT_EVENT);
                       }
 
                       resolve(true);

@@ -3,6 +3,8 @@ import {StringDecoder} from 'string_decoder';
 
 import moment from 'moment';
 
+/* eslint-disable global-require */
+
 export default class LogTransform extends require('stream').Transform {
     constructor(options) {
         super({objectMode: true});
