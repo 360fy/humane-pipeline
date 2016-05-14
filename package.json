@@ -1,6 +1,6 @@
 {
   "name": "humane-data-pipeline",
-  "version": "1.1.16",
+  "version": "1.1.17",
   "description": "Data Pipeline module for Humane Discovery",
   "repository": "git@github.com:360fy/humane-data-pipeline.git",
   "scripts": {
