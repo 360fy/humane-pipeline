@@ -1,8 +1,6 @@
 import _ from 'lodash';
 import {StringDecoder} from 'string_decoder';
 
-/* eslint-disable global-require */
-
 export default class LineSeparatorTransform extends require('stream').Transform {
     constructor(options) {
         super({readableObjectMode: true});

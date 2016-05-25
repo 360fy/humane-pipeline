@@ -1,6 +1,5 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
-/* eslint-disable global-require */
 
 class IndexerDataTransform extends require('stream').Transform {
     constructor(params) {

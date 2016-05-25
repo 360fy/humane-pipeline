@@ -1,4 +1,3 @@
-/* eslint-disable global-require */
 class FunctionMapper extends require('stream').Transform {
     constructor(config) {
         super({objectMode: true});

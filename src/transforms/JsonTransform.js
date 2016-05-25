@@ -2,8 +2,6 @@ import JsonParser from 'jsonparse';
 import _ from 'lodash';
 import {StringDecoder} from 'string_decoder';
 
-/* eslint-disable global-require */
-
 function check(pathKey, dataKey) {
     if (_.isString(pathKey)) {
         return dataKey === pathKey;

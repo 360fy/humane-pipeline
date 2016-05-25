@@ -2,7 +2,6 @@ import _ from 'lodash';
 import {StringDecoder} from 'string_decoder';
 import OS from 'os';
 
-/* eslint-disable global-require */
 export default class CsvTransform extends require('stream').Transform {
     constructor(options) {
         super({readableObjectMode: true});
