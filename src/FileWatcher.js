@@ -1,4 +1,4 @@
-import FileStorage from 'lowdb/file-sync';
+import FileStorage from 'lowdb/lib/file-sync';
 import Chokidar from 'chokidar';
 import OS from 'os';
 import Path from 'path';
@@ -24,11 +24,11 @@ export default function (args) {
         // check file does not exist in db
         // if exists, skip it
         const id = md5(path);
-        if (!db('files').find({id})) {
+        if (!db.get('files').find({id}).value()) {
             console.log(`>>> Watcher: picked file: ${path} <<<`);
 
             // else, add the file and call the callback
-            db('files').push({id, path, time: Date.now()});
+            db('files').push({id, path, time: Date.now()}).value();
 
             // TODO: enqueue file in a job queue instead of calling process directly
             args.process(path, stats);
