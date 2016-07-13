@@ -1,8 +1,8 @@
 import _ from 'lodash';
 
 export default class ArrayTransform extends require('stream').Transform {
-    constructor() {
-        super({objectMode: true});
+    constructor(key) {
+        super({readableObjectMode: true, writableObjectMode: true});
     }
 
     _transform(chunk, encoding, done) {

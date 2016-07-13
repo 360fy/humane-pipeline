@@ -17,7 +17,7 @@ function check(pathKey, dataKey) {
 }
 
 export default class JsonTransform extends require('stream').Transform {
-    constructor(options) {
+    constructor(key, options) {
         super({readableObjectMode: true});
         this.decoder = new StringDecoder(options && options.encoding || 'utf8');
 

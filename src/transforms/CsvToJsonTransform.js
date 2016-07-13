@@ -2,8 +2,8 @@ import _ from 'lodash';
 import {StringDecoder} from 'string_decoder';
 import OS from 'os';
 
-export default class CsvTransform extends require('stream').Transform {
-    constructor(options) {
+export default class CsvToJsonTransform extends require('stream').Transform {
+    constructor(key, options) {
         super({readableObjectMode: true});
 
         this.header = options.header;
@@ -54,14 +54,14 @@ export default class CsvTransform extends require('stream').Transform {
         this.currentBufferLength = 0;
 
         this.lastChar = null;
-        
+
         this.quoteBufferLength = 0;
         this.inQuotedBlock = false;
 
         this.headerRowSeen = false;
 
         if (!this.header && (!this.columns || _.isEmpty(this.columns))) {
-            throw new Error('Either columns array should be provided or header should be true!');
+            throw new Error(`At ${key} either columns array should be provided or header should be true!`);
         }
     }
 

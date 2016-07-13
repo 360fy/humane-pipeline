@@ -2,8 +2,8 @@ import _ from 'lodash';
 import {StringDecoder} from 'string_decoder';
 
 export default class LineSeparatorTransform extends require('stream').Transform {
-    constructor(options) {
-        super({readableObjectMode: true});
+    constructor(key, options) {
+        super({readableObjectMode: options && options.jsonParse || false});
         this.buffer = '';
         this.separator = (options && options.separator) || /\r\n|\r|\n/g;
         this.flushTail = (options && options.flushTail || true);

@@ -4,8 +4,8 @@ import {StringDecoder} from 'string_decoder';
 import moment from 'moment';
 
 export default class LogTransform extends require('stream').Transform {
-    constructor(options) {
-        super({objectMode: true});
+    constructor(key, options) {
+        super({readableObjectMode: true});
         this.decoder = new StringDecoder(options.encoding || 'utf8');
         this.regex = options.regex;
         this.fields = options.fields;
