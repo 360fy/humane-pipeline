@@ -95,29 +95,26 @@ class SqlInputProcessor extends PipelineProcessor {
                     console.error('<< ERROR >> Closing connection', error, error.stack);
                     reject(`ERROR: Connection Close Error: ${error.message}`);
                 }
-
-                resolve(true);
             });
+
+            resolve(true);
         });
     }
 
     _query(params) {
         // build query from query and query params
-        if (params.queryParams) {
-            const compiledQuery = _.template(params.query);
+        const compiledQuery = _.template(params.query);
 
-            const escapedParams = _.mapValues(params.queryParams, value => {
-                if (_.isString(value)) {
-                    return MySql.escape(value);
-                }
+        const queryParams = _.defaults({}, params.queryParams, params);
+        const escapedParams = _.mapValues(queryParams, value => {
+            if (_.isString(value)) {
+                return MySql.escape(value);
+            }
 
-                return value;
-            });
+            return value;
+        });
 
-            return compiledQuery(escapedParams);
-        }
-
-        return params.query;
+        return compiledQuery(escapedParams);
     }
 
     _runQuery(connection, params) {
@@ -138,19 +135,21 @@ class SqlInputProcessor extends PipelineProcessor {
           .then(queryStream => {
               const promises = this.runPipeline(queryStream);
 
-              return Promise.all(promises)
-                .then(() => {
-                    console.log(`Completed processing in: ${(performanceNow() - startTime).toFixed(3)}ms`);
-
-                    // if (params._watch) {
-                    //     this.running = false;
-                    //     this.eventEmitter.emit(PROCESS_NEXT_EVENT);
-                    // }
-
-                    return true;
-                });
+              return Promise.all(promises);
+              
+                // .then(() => {
+                //     // console.log(`Completed processing in: ${(performanceNow() - startTime).toFixed(3)}ms`);
+                //
+                //     // if (params._watch) {
+                //     //     this.running = false;
+                //     //     this.eventEmitter.emit(PROCESS_NEXT_EVENT);
+                //     // }
+                //
+                //     return true;
+                // });
           })
           .then(() => this._endConnection(connection))
+          .then(() => resolve(true))
           .catch(error => {
               console.error('<< ERROR >>', error, error.stack);
               reject(error);

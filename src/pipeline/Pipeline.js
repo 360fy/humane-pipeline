@@ -136,6 +136,24 @@ export class RootPipeline extends Pipeline {
     
 }
 
+export class ExtDataMapPipeline extends Pipeline {
+
+    constructor(key, settings) {
+        super(key, null, PipelineTypes.extDataMap, settings);
+    }
+
+    inputPipeline() {
+        const pipeline = _.head(this.pipelines());
+
+        if (!pipeline || !(pipeline instanceof InputPipeline)) {
+            throw new ValidationError(`First pipeline for ${this.key()} must be InputPipeline`);
+        }
+
+        return pipeline;
+    }
+    
+}
+
 export class Batcher {
 }
 

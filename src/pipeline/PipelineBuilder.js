@@ -6,6 +6,8 @@ import * as Pipeline from './Pipeline';
 import BuilderError from './BuilderError';
 import PipelineTypes from './PipelineTypes';
 
+import {extMapperWriterBuilder} from './../transforms/ExtMapperTransform';
+
 const DefaultPipelineParams = {memorySize: 2048, gcInterval: 50, concurrency: 1};
 
 class HasPath {
@@ -212,7 +214,7 @@ class InputPipelineBuilder extends BasePipelineBuilder {
     }
 
     build(pathKey, parentPipeline) {
-        if (parentPipeline._type !== PipelineTypes.root) {
+        if (parentPipeline._type !== PipelineTypes.root && parentPipeline._type !== PipelineTypes.extDataMap) {
             throw new BuilderError('Input is only allowed for root pipeline', pathKey);
         }
 
@@ -241,8 +243,8 @@ class TransformPipelineBuilder extends BasePipelineBuilder {
         this._name = name;
         this._transformProcessor = transformProcessor;
         this._path = parent && parent._path;
-        this._supportsSplit = pipelineDef.supportsSplit && pipelineDef.supportsSplit() || false;
-        this._supportsBatch = pipelineDef.supportsBatch && pipelineDef.supportsBatch() || false;
+        this._supportsSplit = pipelineDef && pipelineDef.supportsSplit && pipelineDef.supportsSplit() || false;
+        this._supportsBatch = pipelineDef && pipelineDef.supportsBatch && pipelineDef.supportsBatch() || false;
     }
 
     build(pathKey, parentPipeline) {
@@ -258,8 +260,8 @@ class TransformPipelineBuilder extends BasePipelineBuilder {
 
 class PipelineBuilder extends BasePipelineBuilder {
 
-    constructor(parent, type) {
-        super(parent, type, DefaultPipelineParams);
+    constructor(parent, type, settings) {
+        super(parent, type, settings);
 
         this._path = null;
         this._pipelineBuilders = [];
@@ -286,6 +288,22 @@ class PipelineBuilder extends BasePipelineBuilder {
             };
         });
     }
+
+    // extMap(mapKeyFn, extDataMapPipelineBuilderFn, mapperFn) {
+    //     this._setPath(ExtMap.name);
+    //    
+    //     const extDataMapPipelineBuilder = new ExtDataMapPipelineBuilder(this);
+    //    
+    //     extDataMapPipelineBuilderFn(extDataMapPipelineBuilder);
+    //    
+    //     const extDataMapPipeline = extDataMapPipelineBuilder.build();
+    //    
+    //     const obj = ExtMap.builder(this._path, mapKeyFn, extDataMapPipeline, mapperFn);
+    //
+    //     return this._push(
+    //       PipelineTypes.transform,
+    //       new TransformPipelineBuilder(this, ExtMap.name, obj.transformProcessor, obj.settings, ExtMap));
+    // }
 
     fork(builderFn) {
         this._setPath(PipelineTypes.fork);
@@ -390,10 +408,96 @@ class ForkPipelineBuilder extends PipelineBuilder {
     }
 }
 
+export class ExtDataMapPipelineBuilder extends BasePipelineBuilder {
+
+    constructor(mapperFn, settings) {
+        super(null, PipelineTypes.extDataMap, settings);
+
+        this._mapperFn = mapperFn;
+        this._path = null;
+        this._pipelineBuilders = [];
+
+        this._extendWithPlugins();
+    }
+
+    _push(type, pipelineBuilder) {
+        this._pipelineBuilders.push({type, key: this._path, builder: pipelineBuilder});
+
+        return this;
+    }
+
+    _extendWithPlugins() {
+        _.forEach(pipelineRegistry.transformPipelines(), (pipelineDef, key) => {
+            this[key] = (...settings) => {
+                this._setPath(key);
+
+                const obj = pipelineDef.builder(this._path, ...settings);
+
+                return this._push(
+                  PipelineTypes.transform,
+                  new TransformPipelineBuilder(this, key, obj.transformProcessor, obj.settings, pipelineDef));
+            };
+        });
+    }
+
+    input(builderFn) {
+        this._setPath(PipelineTypes.input);
+
+        if (!_.isFunction(builderFn)) {
+            throw new BuilderError('Must be an input builder function', this._path);
+        }
+
+        const builder = new InputPipelineBuilder(this);
+
+        builderFn(builder);
+
+        return this._push(PipelineTypes.input, builder);
+    }
+
+    build() {
+        const extDataMapPipeline = new Pipeline.ExtDataMapPipeline(this._key, this._settings);
+
+        const pipelines = [];
+
+        // null ==> any
+        let nextAllowedType = PipelineTypes.input;
+
+        _.forEach(this._pipelineBuilders, ({type, key, builder}) => {
+            if (nextAllowedType && nextAllowedType !== type) {
+                // throw error
+                throw new BuilderError(`Only '${nextAllowedType}' allowed`, key);
+            }
+
+            if (type === PipelineTypes.input) {
+                nextAllowedType = null;
+            } else if (type === PipelineTypes.transform) {
+                nextAllowedType = null;
+            } else {
+                throw new BuilderError(`'${type}' call not allowed`, key);
+            }
+
+            const pipeline = builder.build(key, extDataMapPipeline);
+
+            pipelines.push(pipeline);
+
+            return true;
+        });
+        
+        const obj = extMapperWriterBuilder(this._path, this._mapperFn);
+        
+        pipelines.push(new Pipeline.OutputPipeline(this._path, extDataMapPipeline, 'MapperFnWriter', obj.outputProcessor, obj.settings));
+
+        extDataMapPipeline._pipelines = pipelines;
+
+        return extDataMapPipeline;
+    }
+
+}
+
 // proxy of basic pipeline builder methods and methods added from registry
 class RootPipelineBuilder extends PipelineBuilder {
     constructor(name) {
-        super(null, PipelineTypes.root);
+        super(null, PipelineTypes.root, DefaultPipelineParams);
         this._name = name;
         this._key = PipelineTypes.root;
         this._path = this._name;

@@ -15,6 +15,7 @@ import * as PickByTransform from './transformProcessors/PickBy';
 import * as OmitByTransform from './transformProcessors/OmitBy';
 import * as ValuesTransform from './transformProcessors/Values';
 import * as KeysTransform from './transformProcessors/Keys';
+import * as ExtMap from './transformProcessors/ExtMap';
 import * as IndexerOutput from './outputProcessors/IndexerOutput';
 import * as FileOutput from './outputProcessors/FileOutput';
 import * as JsonFileOutput from './outputProcessors/JsonFileOutput';
@@ -48,7 +49,8 @@ export default new (class {
             omitBy: OmitByTransform,
             pickBy: PickByTransform,
             values: ValuesTransform,
-            keys: KeysTransform
+            keys: KeysTransform,
+            extMap: ExtMap
         };
     }
 

@@ -11,12 +11,8 @@ export default class ReduceTransform extends require('stream').Transform {
     }
 
     _transform(chunk, encoding, done) {
-        if (_.isArray(chunk)) {
-            this.accumulator = _.reduce(chunk, this.iteratee, this.accumulator);
-        } else if (_.isObject(chunk)) {
-            this.accumulator = this.iteratee(this.accumulator, chunk);
-        } else if (!_.isUndefined(chunk) && !_.isNull(chunk)) {
-            console.warn('ReduceTransform: not applying transform - can be applied to only object or array: ', this.iteratee, this.accumulator);
+        if (!_.isUndefined(chunk) && !_.isNull(chunk)) {
+            this.iteratee(this.accumulator, chunk);
         }
 
         if (this._batcher && this._batcher.shouldRoll(chunk)) {
@@ -29,6 +25,7 @@ export default class ReduceTransform extends require('stream').Transform {
     
     _setAccumulator() {
         this.accumulator = this.originalAccumulator && _.cloneDeep(this.originalAccumulator);
+        return this.accumulator;
     }
 
     _flush(done) {

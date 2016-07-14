@@ -1,4 +1,6 @@
 import _ from 'lodash';
+import Promise from 'bluebird';
+import performanceNow from 'performance-now';
 import {Command} from 'command-line-boilerplate/lib/CliBuilder';
 import pipelineBuilder from './pipeline/PipelineBuilder';
 import {RootPipeline} from './pipeline/Pipeline';
@@ -49,6 +51,8 @@ export default function (pipelineConfigsOrBuilder) {
             .description(`Runs ${key} pipeline`)
             .action(
               args => {
+                  const startTime = performanceNow();
+                  
                   const inputPipeline = rootPipeline.inputPipeline();
 
                   const inputProcessorBuilder = inputPipeline.inputProcessor();
@@ -58,7 +62,11 @@ export default function (pipelineConfigsOrBuilder) {
 
                   const inputProcessor = inputProcessorBuilder(rootPipeline, inputPipeline.settings(), args);
 
-                  return inputProcessor.run(args);
+                  return Promise.resolve(inputProcessor.run())
+                    .then(() => {
+                        console.log(`Completed processing in: ${(performanceNow() - startTime).toFixed(3)}ms`);
+                        return true;
+                    });
               },
               {watch: !!rootPipeline.settings('memorySize'), memorySize: rootPipeline.settings('memorySize'), gcInterval: rootPipeline.settings('gcInterval')}
             );

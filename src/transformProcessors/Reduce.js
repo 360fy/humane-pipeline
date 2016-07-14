@@ -14,7 +14,7 @@ export function builder(buildKey, iteratee, accumulator) {
 
     BuilderUtils.validateSettingsWithSchema(buildKey, iteratee, BuilderUtils.IterateeSchema, 'iteratee');
 
-    if (accumulator && (!_.isObject(accumulator) || !_.isArray(accumulator))) {
+    if (accumulator && (!_.isObject(accumulator) && !_.isArray(accumulator))) {
         throw new BuilderError('Accumulator must be either object or array', buildKey);
     }
 

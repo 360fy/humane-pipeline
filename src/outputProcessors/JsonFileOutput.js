@@ -6,7 +6,7 @@ import * as FileOutput from './FileOutput';
 
 export const name = 'jsonFile';
 
-export const defaultArgs = FileOutput.defaultArgs;
+// export const defaultArgs = FileOutput.defaultArgs;
 
 export const supportsSplit = () => true;
 

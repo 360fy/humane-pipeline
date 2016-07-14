@@ -9,16 +9,15 @@ export const name = 'file';
 
 export const supportsSplit = () => true;
 
-export const defaultArgs = () => ({
-    output: new ArgBuilder('output')
-      .short('o')
-      .required()
-      .description('File path for output')
-      .build()
-});
+// export const defaultArgs = () => ({
+//     output: new ArgBuilder('output')
+//       .short('o')
+//       .required()
+//       .description('File path for output')
+//       .build()
+// });
 
 const SplitIdRegex = /\${[\s]*splitId[\s]*}/;
-
 
 export function attachSplitId(fileName, splitId) {
     if (!SplitIdRegex.test(fileName)) {

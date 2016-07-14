@@ -35,7 +35,7 @@
     "moment": "2.14.1",
     "mysql": "^2.11.1",
     "performance-now": "0.2.0",
-    "plugin-boilerplate": "^1.0.0"
+    "plugin-boilerplate": "^1.0.1"
   },
   "devDependencies": {
     "babel-core": "6.10.4",
