@@ -1,6 +1,6 @@
 import _ from 'lodash';
 
-export default class SplitWriteTransform extends require('stream').Writable {
+export default class SplitWritable extends require('stream').Writable {
     constructor(key, objectMode, encoding, splitter, writeStreamBuilder) {
         super({objectMode});
 

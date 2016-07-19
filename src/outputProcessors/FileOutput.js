@@ -3,7 +3,7 @@ import OS from 'os';
 import FS from 'fs';
 import moment from 'moment';
 import {ArgBuilder} from '../pipeline/PipelineBuilder';
-import SplitWriteTransform from './../transforms/SplitWriteTransform';
+import SplitWritable from '../writables/SplitWritable';
 
 export const name = 'file';
 
@@ -58,7 +58,7 @@ export function outputProcessor(key, stream, params) {
     let finalStream = null;
 
     if (params._splitter) {
-        const splitTransform = new SplitWriteTransform(key,
+        const splitWritable = new SplitWritable(key,
           false,
           params.encoding || 'utf8',
           params._splitter,
@@ -66,7 +66,7 @@ export function outputProcessor(key, stream, params) {
               const fileName = _.template(attachSplitId(params.output, splitId))(fileNameTemplateContext(splitId));
               return FS.createWriteStream(fileName, {flags: 'a', autoClose: true});
           });
-        finalStream = stream.pipe(splitTransform);
+        finalStream = stream.pipe(splitWritable);
     } else {
         const fileName = _.template(params.output)(fileNameTemplateContext());
         finalStream = stream.pipe(FS.createWriteStream(fileName, {flags: 'a', autoClose: true}));

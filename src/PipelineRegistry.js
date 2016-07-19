@@ -16,7 +16,9 @@ import * as OmitByTransform from './transformProcessors/OmitBy';
 import * as ValuesTransform from './transformProcessors/Values';
 import * as KeysTransform from './transformProcessors/Keys';
 import * as ExtMap from './transformProcessors/ExtMap';
-import * as IndexerOutput from './outputProcessors/IndexerOutput';
+import * as HttpRequestOutput from './outputProcessors/HttpRequestOutput';
+import * as HumaneIndexerUpsert from './outputProcessors/HumaneIndexerUpsert';
+import * as HumaneIndexerSignal from './outputProcessors/HumaneIndexerSignal';
 import * as FileOutput from './outputProcessors/FileOutput';
 import * as JsonFileOutput from './outputProcessors/JsonFileOutput';
 import * as StdOutput from './outputProcessors/StdOutput';
@@ -28,7 +30,9 @@ export default new (class {
             file: FileOutput,
             jsonFile: JsonFileOutput,
             stdout: StdOutput,
-            index: IndexerOutput
+            http: HttpRequestOutput,
+            humaneIndexUpsert: HumaneIndexerUpsert,
+            humaneIndexSignal: HumaneIndexerSignal
         };
         this._inputPipelines = {
             file: FileInputProcessor,

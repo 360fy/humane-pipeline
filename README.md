@@ -23,30 +23,30 @@ It is part of a bigger ecosystem of humane-discovery platform, but is installabl
 
 ### Json transformations
 
-- filter
-- pick
-- pickBy
-- omit
-- omitBy
-- reduce
-- groupBy
-- keys
-- values
-- map
-- extMap
+- `filter`
+- `pick`
+- `pickBy`
+- `omit`
+- `omitBy`
+- `reduce`
+- `groupBy`
+- `keys`
+- `values`
+- `map`
+- `extMap`
 
 ### Transforming file data to JSON
 
-- log
-- json
-- jsonArray
-- csvToJson
+- `log`
+- `json`
+- `jsonArray`
+- `csvToJson`
 
 ### Transforming JSON to flat
 
-- jsonToCsv
+- `jsonToCsv`
 
-## Output Sources
+## Output Destinations
 
 - `file` - text file or json file
  

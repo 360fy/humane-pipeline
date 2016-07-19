@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import FS from 'fs';
-import SplitWriteTransform from './../transforms/SplitWriteTransform';
+import SplitWritable from '../writables/SplitWritable';
 import JsonToStringTransform from '../transforms/JsonToStringTransform';
 import * as FileOutput from './FileOutput';
 
@@ -23,7 +23,7 @@ export function builder(buildKey, fileNameOrSettings) {
         settings,
         outputProcessor: (key, stream, params) => {
             if (params._splitter) {
-                const splitTransform = new SplitWriteTransform(key,
+                const splitWritable = new SplitWritable(key,
                   true,
                   params.encoding || 'utf8',
                   params._splitter,
@@ -37,7 +37,7 @@ export function builder(buildKey, fileNameOrSettings) {
                       return inputStream;
                   });
 
-                const finalStream = stream.pipe(splitTransform);
+                const finalStream = stream.pipe(splitWritable);
 
                 finalStream.on('finish', () => {
                     params.resolve(true);
