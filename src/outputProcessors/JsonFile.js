@@ -2,7 +2,7 @@ import _ from 'lodash';
 import FS from 'fs';
 import SplitWritable from '../writables/SplitWritable';
 import JsonToStringTransform from '../transforms/JsonToStringTransform';
-import * as FileOutput from './FileOutput';
+import * as FileOutput from './File';
 
 export const name = 'jsonFile';
 

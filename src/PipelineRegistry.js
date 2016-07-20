@@ -1,5 +1,7 @@
-import * as FileInputProcessor from './inputProcessors/FileInputProcessor';
-import * as SqlInputProcessor from './inputProcessors/SqlInputProcessor';
+import * as FileInput from './inputProcessors/File';
+import * as SqlInput from './inputProcessors/Sql';
+import * as FilePatternInput from './inputProcessors/FilePattern';
+import * as DirectoryInput from './inputProcessors/Directory';
 import * as JsonTransform from './transformProcessors/Json';
 import * as CsvToJsonTransform from './transformProcessors/CsvToJson';
 import * as JsonToCsvTransform from './transformProcessors/JsonToCsv';
@@ -16,12 +18,12 @@ import * as OmitByTransform from './transformProcessors/OmitBy';
 import * as ValuesTransform from './transformProcessors/Values';
 import * as KeysTransform from './transformProcessors/Keys';
 import * as ExtMap from './transformProcessors/ExtMap';
-import * as HttpRequestOutput from './outputProcessors/HttpRequestOutput';
+import * as HttpRequestOutput from './outputProcessors/HttpRequest';
 import * as HumaneIndexerUpsert from './outputProcessors/HumaneIndexerUpsert';
 import * as HumaneIndexerSignal from './outputProcessors/HumaneIndexerSignal';
-import * as FileOutput from './outputProcessors/FileOutput';
-import * as JsonFileOutput from './outputProcessors/JsonFileOutput';
-import * as StdOutput from './outputProcessors/StdOutput';
+import * as FileOutput from './outputProcessors/File';
+import * as JsonFileOutput from './outputProcessors/JsonFile';
+import * as StdOutput from './outputProcessors/StdOut';
 
 export default new (class {
 
@@ -35,8 +37,10 @@ export default new (class {
             humaneIndexSignal: HumaneIndexerSignal
         };
         this._inputPipelines = {
-            file: FileInputProcessor,
-            sql: SqlInputProcessor
+            file: FileInput,
+            sql: SqlInput,
+            filePattern: FilePatternInput,
+            directory: DirectoryInput
         };
         this._transformPipelines = {
             json: JsonTransform,
