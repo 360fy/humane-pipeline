@@ -136,7 +136,7 @@ export class FileInputProcessor extends PipelineProcessor {
         const that = this;
 
         return new Promise((resolve, reject) => {
-            FS.access(params.input, FS.R_OK, (error) => {
+            FS.access(params.file, FS.R_OK, (error) => {
                 if (error) {
                     console.error(`ERROR: Input file ${params.file} not found!`);
                     return;
