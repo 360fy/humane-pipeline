@@ -60,9 +60,7 @@ class FileInputProcessor extends PipelineProcessor {
 
         console.log('Started processing: ', params.input);
 
-        const promises = this.runPipeline(this._inputStream(params));
-
-        return Promise.all(promises)
+        return Promise.resolve(this.runPipeline(this._inputStream(params)))
           .then(() => {
               console.log(`Completed processing '${params.input}' in: ${(performanceNow() - startTime).toFixed(3)}ms`);
 
@@ -151,14 +149,16 @@ class FileInputProcessor extends PipelineProcessor {
 
         const that = this;
 
-        return new Promise(resolve =>
+        return new Promise((resolve, reject) =>
           FS.access(params.input, FS.R_OK, (error) => {
               if (error) {
                   console.error(`ERROR: Input file ${params.input} not found!`);
                   return;
               }
 
-              resolve(that._processFile(params));
+              Promise.resolve(that._processFile(params))
+                .then(resolve)
+                .catch(reject);
           })
         );
     }

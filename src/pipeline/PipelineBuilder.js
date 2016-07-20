@@ -607,20 +607,31 @@ class RootPipelineBuilder extends PipelineBuilder {
 
     collectDefaultArgs(pipeline) {
         if (_.isArray(pipeline)) {
-            _.forEach(pipeline, child => this.collectDefaultArgs(child));
-        } else if (pipeline instanceof Pipeline.ChildPipeline || pipeline instanceof Pipeline.RootPipeline) {
+            _.forEach(pipeline, child => {
+                this.collectDefaultArgs(child);
+                return true;
+            });
+        } else if (pipeline instanceof Pipeline.ChildPipeline || pipeline instanceof Pipeline.RootPipeline || pipeline instanceof Pipeline.ExtDataMapPipeline) {
             this.collectDefaultArgs(pipeline.pipelines());
-        } else if (pipeline.defaultArgs && pipeline.defaultArgs()) {
-            if (!_.isObject(pipeline.defaultArgs())) {
+        } else if (pipeline.defaultArgs && _.isFunction(pipeline.defaultArgs)) {
+            const defaultArgs = pipeline.defaultArgs();
+            if (!defaultArgs) {
+                return;
+            }
+
+            if (!_.isObject(defaultArgs)) {
                 throw new BuilderError('Default args must be key-value map', pipeline.key());
             }
 
-            _.forEach(pipeline.defaultArgs(), (arg, key) => {
+            _.forEach(defaultArgs, (arg, key) => {
                 if (_.has(this._args, key)) {
                     throw new BuilderError(`Duplicate default arg: ${key}`, pipeline.key());
                 }
 
-                _.set(this._args, key, arg);
+                const setting = pipeline.settings(key);
+                if (!setting || setting instanceof Pipeline.PipelineArg && setting.name() === key) {
+                    _.set(this._args, key, arg);
+                }
             });
         }
     }
@@ -632,7 +643,6 @@ class RootPipelineBuilder extends PipelineBuilder {
 
         this.validatePipelines(pipelines);
 
-        // TODO: collect from unresolved parameters only
         if (_.isEmpty(rootPipeline.args())) {
             this.collectDefaultArgs(pipelines);
         }

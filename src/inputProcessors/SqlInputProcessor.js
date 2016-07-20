@@ -123,31 +123,27 @@ class SqlInputProcessor extends PipelineProcessor {
     }
 
     _fetch(params, resolve, reject) {
-        const startTime = performanceNow();
+        // const startTime = performanceNow();
 
         let connection = null;
+
+        // .then(() => {
+        //     // console.log(`Completed processing in: ${(performanceNow() - startTime).toFixed(3)}ms`);
+        //
+        //     // if (params._watch) {
+        //     //     this.running = false;
+        //     //     this.eventEmitter.emit(PROCESS_NEXT_EVENT);
+        //     // }
+        //
+        //     return true;
+        // });
 
         this._connection(params)
           .then(arg => {
               connection = arg;
               return this._runQuery(connection, params);
           })
-          .then(queryStream => {
-              const promises = this.runPipeline(queryStream);
-
-              return Promise.all(promises);
-              
-                // .then(() => {
-                //     // console.log(`Completed processing in: ${(performanceNow() - startTime).toFixed(3)}ms`);
-                //
-                //     // if (params._watch) {
-                //     //     this.running = false;
-                //     //     this.eventEmitter.emit(PROCESS_NEXT_EVENT);
-                //     // }
-                //
-                //     return true;
-                // });
-          })
+          .then(queryStream => this.runPipeline(queryStream))
           .then(() => this._endConnection(connection))
           .then(() => resolve(true))
           .catch(error => {

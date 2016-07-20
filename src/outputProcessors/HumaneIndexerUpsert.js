@@ -1,7 +1,6 @@
 // import _ from 'lodash';
 // import Promise from 'bluebird';
-// import * as Request from 'humane-node-commons/lib/Request';
-// import {ArgBuilder} from '../pipeline/PipelineBuilder';
+import {ArgBuilder} from '../pipeline/PipelineBuilder';
 
 import HttpRequestWritable from '../writables/HttpRequestWritable';
 
@@ -9,20 +8,16 @@ export const name = 'humaneIndexUpsert';
 
 // export const supportsBatch = () => true;
 
-// export const defaultArgs = () => ({
-//     instance: new ArgBuilder('instance')
-//       .required()
-//       .description('Instance Url')
-//       .build(),
-//     // indexMethod: new ArgBuilder('indexMethod')
-//     //   .required()
-//     //   .description('Index handler method')
-//     //   .build(),
-//     indexType: new ArgBuilder('indexType')
-//       .required()
-//       .description('Index Type')
-//       .build()
-// });
+export const defaultArgs = () => ({
+    instance: new ArgBuilder('instance')
+      .required()
+      .description('Instance Url')
+      .build(),
+    indexType: new ArgBuilder('indexType')
+      .required()
+      .description('Index Type')
+      .build()
+});
 
 export function builder(buildKey, settings) {
     // TODO: validate settings - must have instance, type

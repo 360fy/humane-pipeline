@@ -1,10 +1,10 @@
 import _ from 'lodash';
-import Joi from 'joi';
 import Promise from 'bluebird';
 import {EventEmitter} from 'events';
 import highland from 'highland';
 import ValidationError from 'humane-node-commons/lib/ValidationError';
 import * as Pipeline from './Pipeline';
+// import Joi from 'joi';
 
 export default class PipelineProcessor {
     constructor(rootPipeline, settings, args) {
@@ -112,9 +112,13 @@ export default class PipelineProcessor {
             });
         }
 
-        buildStreamPipeline(rootStream, this.rootPipeline().pipelines());
+        try {
+            buildStreamPipeline(rootStream, this.rootPipeline().pipelines());
+        } catch (error) {
+            return Promise.reject(error);
+        }
 
-        return promises;
+        return Promise.all(promises);
     }
 
 }

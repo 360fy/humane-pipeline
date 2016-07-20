@@ -66,6 +66,17 @@ export default function (pipelineConfigsOrBuilder) {
                     .then(() => {
                         console.log(`Completed processing in: ${(performanceNow() - startTime).toFixed(3)}ms`);
                         return true;
+                    })
+                    .catch((error) => {
+                        if (error instanceof ValidationError) {
+                            // TODO: color code it
+                            console.error(`<<<< ERROR >>>> -- ${error.message}`);
+                            return false;
+                        }
+
+                        // TODO: color code it
+                        console.error('<<<< ERROR >>>>', error);
+                        return false;
                     });
               },
               {watch: !!rootPipeline.settings('memorySize'), memorySize: rootPipeline.settings('memorySize'), gcInterval: rootPipeline.settings('gcInterval')}
