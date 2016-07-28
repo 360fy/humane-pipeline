@@ -22,7 +22,8 @@ import * as HttpRequestOutput from './outputProcessors/HttpRequest';
 import * as HumaneIndexerUpsert from './outputProcessors/HumaneIndexerUpsert';
 import * as HumaneIndexerSignal from './outputProcessors/HumaneIndexerSignal';
 import * as FileOutput from './outputProcessors/File';
-import * as JsonFileOutput from './outputProcessors/JsonFile';
+import * as S3Output from './outputProcessors/S3';
+// import * as JsonFileOutput from './outputProcessors/JsonFile';
 import * as StdOutput from './outputProcessors/StdOut';
 
 export default new (class {
@@ -30,7 +31,8 @@ export default new (class {
     constructor() {
         this._outputPipelines = {
             file: FileOutput,
-            jsonFile: JsonFileOutput,
+            s3: S3Output,
+            // jsonFile: JsonFileOutput,
             stdout: StdOutput,
             http: HttpRequestOutput,
             humaneIndexUpsert: HumaneIndexerUpsert,

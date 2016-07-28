@@ -5,7 +5,6 @@ import pipelineRegistry from '../PipelineRegistry';
 import * as Pipeline from './Pipeline';
 import BuilderError from './BuilderError';
 import PipelineTypes from './PipelineTypes';
-
 import {extMapperWriterBuilder} from './../transforms/ExtMapperTransform';
 
 const DefaultPipelineParams = {memorySize: 2048, gcInterval: 50, concurrency: 1};
@@ -289,22 +288,6 @@ class PipelineBuilder extends BasePipelineBuilder {
         });
     }
 
-    // extMap(mapKeyFn, extDataMapPipelineBuilderFn, mapperFn) {
-    //     this._setPath(ExtMap.name);
-    //    
-    //     const extDataMapPipelineBuilder = new ExtDataMapPipelineBuilder(this);
-    //    
-    //     extDataMapPipelineBuilderFn(extDataMapPipelineBuilder);
-    //    
-    //     const extDataMapPipeline = extDataMapPipelineBuilder.build();
-    //    
-    //     const obj = ExtMap.builder(this._path, mapKeyFn, extDataMapPipeline, mapperFn);
-    //
-    //     return this._push(
-    //       PipelineTypes.transform,
-    //       new TransformPipelineBuilder(this, ExtMap.name, obj.transformProcessor, obj.settings, ExtMap));
-    // }
-
     fork(builderFn) {
         this._setPath(PipelineTypes.fork);
 
@@ -482,9 +465,9 @@ export class ExtDataMapPipelineBuilder extends BasePipelineBuilder {
 
             return true;
         });
-        
+
         const obj = extMapperWriterBuilder(this._path, this._mapperFn);
-        
+
         pipelines.push(new Pipeline.OutputPipeline(this._path, extDataMapPipeline, 'MapperFnWriter', obj.outputProcessor, obj.settings));
 
         extDataMapPipeline._pipelines = pipelines;
@@ -625,7 +608,11 @@ class RootPipelineBuilder extends PipelineBuilder {
 
             _.forEach(defaultArgs, (arg, key) => {
                 if (_.has(this._args, key)) {
-                    throw new BuilderError(`Duplicate default arg: ${key}`, pipeline.key());
+                    if (_.get(this._args, key).required()) {
+                        throw new BuilderError(`Duplicate default arg: ${key}`, pipeline.key());
+                    }
+
+                    return;
                 }
 
                 const setting = pipeline.settings(key);
@@ -1087,7 +1074,14 @@ class SplitterBuilder extends HasPath {
         }
 
         if (this._by === 'weeks' || this._by === 'days' || this._by === 'hours' || this._by === 'minutes' || this._by === 'seconds') {
-            return new Pipeline.DateFieldBoundaryBasedSplitter(this._field, this._dateFieldFormat, this._by, this._num, this._datePrefixFormat, this._dateSuffixPart, this._dateSufixLength, this._defaultValue);
+            return new Pipeline.DateFieldBoundaryBasedSplitter(this._field,
+              this._dateFieldFormat,
+              this._by,
+              this._num,
+              this._datePrefixFormat,
+              this._dateSuffixPart,
+              this._dateSufixLength,
+              this._defaultValue);
         }
 
         return new Pipeline.FieldBasedSplitter(this._field, this._defaultValue);

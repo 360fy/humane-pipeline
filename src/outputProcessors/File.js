@@ -5,17 +5,22 @@ import moment from 'moment';
 import {ArgBuilder} from '../pipeline/PipelineBuilder';
 import SplitWritable from '../writables/SplitWritable';
 
+import JsonToStringTransform from '../transforms/JsonToStringTransform';
+
 export const name = 'file';
 
 export const supportsSplit = () => true;
 
-// export const defaultArgs = () => ({
-//     output: new ArgBuilder('output')
-//       .short('o')
-//       .required()
-//       .description('File path for output')
-//       .build()
-// });
+export const defaultArgs = () => ({
+    outputFile: new ArgBuilder('outputFile')
+      .required()
+      .description('File path for output')
+      .build(),
+    outputJson: new ArgBuilder('outputJson')
+      .boolean()
+      .description('Whether JSON or TEXT output')
+      .build()
+});
 
 const SplitIdRegex = /\${[\s]*splitId[\s]*}/;
 
@@ -51,7 +56,7 @@ export const fileNameTemplateContext = (splitId) => {
 
 // TODO: support gzip
 export function outputProcessor(key, stream, params) {
-    if (!params || !params.output) {
+    if (!params || !params.outputFile) {
         throw new Error(`FileOutput: At ${key} output path not defined`);
     }
 
@@ -59,16 +64,32 @@ export function outputProcessor(key, stream, params) {
 
     if (params._splitter) {
         const splitWritable = new SplitWritable(key,
-          false,
+          !!params.outputJson,
           params.encoding || 'utf8',
           params._splitter,
           (splitId) => {
-              const fileName = _.template(attachSplitId(params.output, splitId))(fileNameTemplateContext(splitId));
-              return FS.createWriteStream(fileName, {flags: 'a', autoClose: true});
+              const fileName = _.template(attachSplitId(params.outputFile, splitId))(fileNameTemplateContext(splitId));
+
+              const writeStream = FS.createWriteStream(fileName, {flags: 'a', autoClose: true});
+
+              if (params.outputJson) {
+                  const inputStream = new JsonToStringTransform();
+
+                  inputStream.pipe(writeStream);
+
+                  return inputStream;
+              }
+
+              return writeStream;
           });
         finalStream = stream.pipe(splitWritable);
     } else {
-        const fileName = _.template(params.output)(fileNameTemplateContext());
+        const fileName = _.template(params.outputFile)(fileNameTemplateContext());
+
+        if (params.outputJson) {
+            stream = stream.pipe(new JsonToStringTransform());
+        }
+
         finalStream = stream.pipe(FS.createWriteStream(fileName, {flags: 'a', autoClose: true}));
     }
 
@@ -83,7 +104,7 @@ export function builder(buildKey, fileNameOrSettings) {
     let settings = null;
     if (fileNameOrSettings) {
         if (_.isString(fileNameOrSettings)) {
-            settings = {output: fileNameOrSettings};
+            settings = {outputFile: fileNameOrSettings};
         } else if (_.isObject(fileNameOrSettings)) {
             settings = fileNameOrSettings;
         }
