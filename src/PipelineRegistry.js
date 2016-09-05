@@ -20,6 +20,7 @@ import * as KeysTransform from './transformProcessors/Keys';
 import * as ExtMap from './transformProcessors/ExtMap';
 import * as HttpRequestOutput from './outputProcessors/HttpRequest';
 import * as HumaneIndexerUpsert from './outputProcessors/HumaneIndexerUpsert';
+import * as HumaneIndexerMerge from './outputProcessors/HumaneIndexerMerge';
 import * as HumaneIndexerSignal from './outputProcessors/HumaneIndexerSignal';
 import * as FileOutput from './outputProcessors/File';
 import * as S3Output from './outputProcessors/S3';
@@ -36,6 +37,7 @@ export default new (class {
             stdout: StdOutput,
             http: HttpRequestOutput,
             humaneIndexUpsert: HumaneIndexerUpsert,
+            humaneIndexMerge: HumaneIndexerMerge,
             humaneIndexSignal: HumaneIndexerSignal
         };
         this._inputPipelines = {
