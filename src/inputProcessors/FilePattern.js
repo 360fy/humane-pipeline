@@ -44,7 +44,7 @@ class FilePatternInputProcessor extends FileInputProcessor {
 
                 // do sequential processing of files
                 Promise
-                  .mapSeries(files, (item, index, length) => that._processFile({file: item}))
+                  .mapSeries(files, (item, index, length) => that._processFile(_.defaults({file: item}, params)))
                   .then(resolve)
                   .catch(reject);
             });
