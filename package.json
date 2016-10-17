@@ -39,7 +39,8 @@
     "moment": "2.14.1",
     "mysql": "^2.11.1",
     "performance-now": "0.2.0",
-    "plugin-boilerplate": "1.1.0"
+    "plugin-boilerplate": "1.1.0",
+    "sanitize-html": "^1.13.0"
   },
   "optionalDependencies": {
     "hiredis": "0.5.0"
