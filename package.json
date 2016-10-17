@@ -1,6 +1,6 @@
 {
   "name": "humane-pipeline",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "description": "Data Pipeline Tool",
   "repository": "git@github.com:360fy/humane-pipeline.git",
   "scripts": {
