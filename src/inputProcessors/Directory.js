@@ -28,23 +28,21 @@ export const name = 'directory';
 class DirectoryInputProcessor extends FileInputProcessor {
 
     run() {
-        const params = this.resolveSettings(this.settings(), this.args());
-
-        if (!params || !params.directory) {
+        if (!this.params() || !this.params().directory) {
             throw new ValidationError('Must pass file(s) directory!');
         }
 
         const that = this;
 
         return new Promise((resolve, reject) => {
-            FsPromise.accessAsync(params.directory, FS.R_OK)
-              .then(() => FsPromise.stat(params.directory))
+            FsPromise.accessAsync(that.params().directory, FS.R_OK)
+              .then(() => FsPromise.stat(that.params().directory))
               .then(stats => {
                   if (!stats.isDirectory()) {
-                      throw new Error(`${params.directory} is not a directory`);
+                      throw new Error(`${that.params().directory} is not a directory`);
                   }
 
-                  return FsPromise.readDir(params.directory);
+                  return FsPromise.readDir(that.params().directory);
               })
               .mapSeries((item, index, length) => that._processFile({file: item}))
               .then(resolve)

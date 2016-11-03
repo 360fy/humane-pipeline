@@ -37,6 +37,7 @@ export default class ExtMapperTransform extends require('stream').Transform {
 
         this._mapKeyFn = params.mapKeyFn;
         this._extDataMapPipeline = params.extDataMapPipeline;
+        this._params = _.omit(params, ['mapKeyFn', 'extDataMapPipeline']);
     }
 
     _transform(chunk, encoding, done) {
@@ -49,7 +50,7 @@ export default class ExtMapperTransform extends require('stream').Transform {
         //     throw new ValidationError(`InputProcessor for pipeline ${key} must be a builder function`);
         // }
 
-        const inputProcessor = inputProcessorBuilder(this._extDataMapPipeline, _.defaults({}, keyParams, inputPipeline.settings()), {__ext_mapper_chunk__: chunk});
+        const inputProcessor = inputProcessorBuilder(this._extDataMapPipeline, _.defaults({}, keyParams, inputPipeline.settings(), this._params), {__ext_mapper_chunk__: chunk});
 
         Promise.resolve(inputProcessor.run())
           .then(() => {

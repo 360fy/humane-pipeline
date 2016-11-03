@@ -14,6 +14,8 @@ export default class PipelineProcessor {
         this._settings = settings;
         this._args = args;
 
+        this._params = _.defaults(this.resolveSettings(this.settings(), this.args()), this.args());
+
         this.eventEmitter = new EventEmitter();
     }
 
@@ -27,6 +29,10 @@ export default class PipelineProcessor {
 
     args() {
         return this._args;
+    }
+
+    params() {
+        return this._params;
     }
 
     resolveFromArg(setting, arg, argGroup) {

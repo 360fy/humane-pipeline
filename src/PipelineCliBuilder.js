@@ -1,4 +1,9 @@
 import _ from 'lodash';
+import FileStorage from 'lowdb/lib/file-sync';
+import OS from 'os';
+import Path from 'path';
+import lowDB from 'lowdb';
+import md5 from 'md5';
 import Promise from 'bluebird';
 import performanceNow from 'performance-now';
 import {Command} from 'command-line-boilerplate/lib/CliBuilder';
@@ -18,6 +23,23 @@ import ValidationError from 'humane-node-commons/lib/ValidationError';
 //         return value;
 //     }, indent);
 // }
+
+function cleanArgs(args) {
+    return _(args).omit([
+        'commands',
+        'options',
+        '_execs',
+        '_allowUnknownOption',
+        '_args',
+        '_name',
+        '_noHelp',
+        'parent',
+        '_description',
+        '_events',
+        '_eventsCount'])
+      .omitBy((value) => _.isFunction(value) || _.isUndefined(value) || _.isNull(value))
+      .value();
+}
 
 // TODO: how to handle running multiple pipelines together ?
 export default function (pipelineConfigsOrBuilder) {
@@ -52,7 +74,7 @@ export default function (pipelineConfigsOrBuilder) {
             .action(
               args => {
                   const startTime = performanceNow();
-                  
+
                   const inputPipeline = rootPipeline.inputPipeline();
 
                   const inputProcessorBuilder = inputPipeline.inputProcessor();
@@ -60,10 +82,23 @@ export default function (pipelineConfigsOrBuilder) {
                       throw new ValidationError(`InputProcessor for pipeline ${key} must be a builder function`);
                   }
 
-                  const inputProcessor = inputProcessorBuilder(rootPipeline, inputPipeline.settings(), args);
+                  const cleanedArgs = cleanArgs(args);
+
+                  const runId = md5(`${key}:${JSON.stringify(cleanedArgs)}`);
+                  const db = lowDB(Path.join(OS.homedir(), '.humane.pipeline.run.db'), {storage: FileStorage});
+
+                  let lastRunTime = 0;
+                  if (db.has(`RUNS.${runId}.TIME`).value()) {
+                      lastRunTime = db.get(`RUNS.${runId}.TIME`).value();
+                  }
+
+                  const inputProcessor = inputProcessorBuilder(rootPipeline, inputPipeline.settings(), _.defaults({LAST_RUN_TIME: lastRunTime}, cleanedArgs));
+
+                  const currentRunTime = new Date().getTime();
 
                   return Promise.resolve(inputProcessor.run())
                     .then(() => {
+                        db.set(`RUNS.${runId}.TIME`, currentRunTime).value();
                         console.log(`Completed processing in: ${(performanceNow() - startTime).toFixed(3)}ms`);
                         return true;
                     })

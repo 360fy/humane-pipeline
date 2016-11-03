@@ -26,16 +26,14 @@ export const name = 'filePattern';
 class FilePatternInputProcessor extends FileInputProcessor {
 
     run() {
-        const params = this.resolveSettings(this.settings(), this.args());
-
-        if (!params || !params.pattern) {
+        if (!this.params() || !this.params().pattern) {
             throw new ValidationError('Must pass file(s) pattern!');
         }
 
         const that = this;
 
         return new Promise((resolve, reject) => {
-            glob(params.pattern, (error, files) => {
+            glob(that.params().pattern, (error, files) => {
                 if (error) {
                     // console.error(`ERROR: Input file ${params.input} not found!`);
                     reject(error);
@@ -44,7 +42,7 @@ class FilePatternInputProcessor extends FileInputProcessor {
 
                 // do sequential processing of files
                 Promise
-                  .mapSeries(files, (item, index, length) => that._processFile(_.defaults({file: item}, params)))
+                  .mapSeries(files, (item, index, length) => that._processFile(_.defaults({file: item}, that.params())))
                   .then(resolve)
                   .catch(reject);
             });

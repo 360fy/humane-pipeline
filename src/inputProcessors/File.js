@@ -123,9 +123,7 @@ export class FileInputProcessor extends PipelineProcessor {
 
     // TODO: support tail mode
     run() {
-        const params = this.resolveSettings(this.settings(), this.args());
-
-        if (!params || !params.file) {
+        if (!this.params() || !this.params().file) {
             throw new ValidationError('Must pass file path!');
         }
 
@@ -136,13 +134,13 @@ export class FileInputProcessor extends PipelineProcessor {
         const that = this;
 
         return new Promise((resolve, reject) => {
-            FS.access(params.file, FS.R_OK, (error) => {
+            FS.access(that.params().file, FS.R_OK, (error) => {
                 if (error) {
-                    console.error(`ERROR: Input file ${params.file} not found!`);
+                    console.error(`ERROR: Input file ${that.params().file} not found!`);
                     return;
                 }
 
-                Promise.resolve(that._processFile(params))
+                Promise.resolve(that._processFile(that.params()))
                   .then(resolve)
                   .catch(reject);
             });

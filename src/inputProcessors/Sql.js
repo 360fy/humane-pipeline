@@ -6,18 +6,12 @@ import MySql from 'mysql';
 import ValidationError from 'humane-node-commons/lib/ValidationError';
 import PipelineProcessor from '../pipeline/PipelineProcessor';
 import * as BuilderUtils from './../pipeline/BuilderUtils';
-// import FileStorage from 'lowdb/lib/file-sync';
-// import lowDB from 'lowdb';
-
-// const PROCESS_NEXT_EVENT = 'PROCESS_NEXT';
 
 export const name = 'sql';
 
 // connection settings = db, host, port = 3306, user, password, database, connectTimeout = 10000, ssl = {ca: } or Amazon RDS
 // query
 // query params
-// mode: full or incremental
-// incrementalModeSettings: {method: date or id, column: [columnA, columnB], pollEvery: 2 minutes}
 class SqlInputProcessor extends PipelineProcessor {
 
     databaseDriver(params) {
@@ -118,25 +112,16 @@ class SqlInputProcessor extends PipelineProcessor {
     }
 
     _runQuery(connection, params) {
-        return connection.query(this._query(params))
+        const query = this._query(params);
+
+        console.log('>> Executing query: ', query);
+
+        return connection.query(query)
           .stream({highWaterMark: 5});
     }
 
     _fetch(params, resolve, reject) {
-        // const startTime = performanceNow();
-
         let connection = null;
-
-        // .then(() => {
-        //     // console.log(`Completed processing in: ${(performanceNow() - startTime).toFixed(3)}ms`);
-        //
-        //     // if (params._watch) {
-        //     //     this.running = false;
-        //     //     this.eventEmitter.emit(PROCESS_NEXT_EVENT);
-        //     // }
-        //
-        //     return true;
-        // });
 
         this._connection(params)
           .then(arg => {
@@ -153,23 +138,9 @@ class SqlInputProcessor extends PipelineProcessor {
     }
 
     run() {
-        const params = this.resolveSettings(this.settings(), this.args());
-
         const that = this;
 
-        // if (!params || !params.input) {
-        //     throw new ValidationError('Must pass input path!');
-        // }
-        //
-        // if (params.watch) {
-        //     return this._watch(params);
-        // }
-
-        // TODO: if it is poll... then poll as per configuration
-        // TODO: let poller execute the fetch
-
-
-        return new Promise((resolve, reject) => that._fetch(params, resolve, reject));
+        return new Promise((resolve, reject) => that._fetch(that.params(), resolve, reject));
     }
 }
 
@@ -184,20 +155,12 @@ const ConnectionSettingsSchema = Joi.object().keys({
     ssl: Joi.alternatives([Joi.string(), Joi.object().keys({ca: Joi.string()})]).optional()
 });
 
-const IncrementalModeSettingsSchema = Joi.object().keys({
-    method: Joi.string().required().valid('date', 'id'),
-    column: Joi.alternatives([Joi.string(), Joi.array().items(Joi.string())]).required(),
-    pollEvery: Joi.number().integer().optional()
-}).optional();
-
-export function builder(buildKey, connectionSettings, query, queryParams, mode = 'full', incrementalModeSettings) {
+export function builder(buildKey, connectionSettings, query, queryParams, LAST_RUN_TIME) {
     BuilderUtils.validateSettingsWithSchema(buildKey, connectionSettings, ConnectionSettingsSchema, 'connectionSettings');
     BuilderUtils.validateSettingsWithSchema(buildKey, query, Joi.string().required(), 'query');
-    BuilderUtils.validateSettingsWithSchema(buildKey, mode, Joi.string().required().valid('full', 'incremental'), 'mode');
-    BuilderUtils.validateSettingsWithSchema(buildKey, incrementalModeSettings, IncrementalModeSettingsSchema, 'incrementalModeSettings');
 
     return {
-        settings: {connectionSettings, query, queryParams, mode, incrementalModeSettings},
+        settings: {connectionSettings, query, queryParams, LAST_RUN_TIME},
         inputProcessor: (rootPipeline, params, args) => new SqlInputProcessor(rootPipeline, params, args)
     };
 }
